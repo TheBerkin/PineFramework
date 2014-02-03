@@ -27,31 +27,31 @@ Effect code examples
 
 Basic slide from 0-1:
 
-`
+```
 push x
 pop out
-`
+```
 
 Sine wave:
-`
+```
 push x
 push pi
 push 2
 prd 3
 sin
 pop out
-`
+```
 
 Random number from 0-9
-`
+```
 push 0
 push 10
 rand
 pop out
-`
+```
 
 Triangle wave:
-`
+```
 push x
 push 0.5
 ge
@@ -67,10 +67,10 @@ jnz down
 sub
 #down
 pop out
-`
+```
 
 Flame flickering effect
-`
+```
 push c
 jnz start
 push 1
@@ -112,4 +112,4 @@ pop a
 push h
 mul
 pop out
-`
+```
