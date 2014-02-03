@@ -48,6 +48,10 @@ namespace PineFramework
         NotEqual =      0x25,
         Sum =           0x26,
         Product =       0x27,
-        InvLerp =       0x28
+        InvLerp =       0x28,
+        Stop =          0x29,
+        OutS =          0x2A,
+        OutR =          0x2B,
+        OutC =          0x2C
     }
 }

@@ -197,12 +197,18 @@ namespace PineFramework
                         writer.Write((byte)Instruction.GE);
                         break;
                     case "pop":
-                        writer.Write((byte)Instruction.Pop);
                         if (parts.Length != 2)
                         {
                             throw new PineException("Cog compile error: Invalid pop syntax \"{0}\"", s);
                         }
-                        reg = GetRegisterIndex(parts[1]);
+                        else if (parts[1] == "out")
+                        {
+                            writer.Write((byte)Instruction.OutS);
+                            break;
+                        }
+                        writer.Write((byte)Instruction.Pop);
+                        
+                        reg = GetRegisterIndex(parts[1]);                        
                         if (reg < 0)
                         {
                             throw new PineException("Cog compile error: Bad pop register \"{0}\"", parts[1]);
@@ -301,8 +307,29 @@ namespace PineFramework
                     case "prd":
                         writer.Write((byte)Instruction.Product);
                         break;
-                    case "dlerp":
+                    case "ilerp":
                         writer.Write((byte)Instruction.InvLerp);
+                        break;
+                    case "out":
+                        reg = GetRegisterIndex(parts[1]);
+                        if (parts.Length != 2)
+                        {
+                            throw new PineException("Cog compile error: Invalid push syntax \"{0}\"", s);
+                        }
+                        if (reg > -1)
+                        {
+                            writer.Write((byte)Instruction.OutR);
+                            writer.Write(reg);
+                        }
+                        else if (double.TryParse(parts[1], out a))
+                        {
+                            writer.Write((byte)Instruction.OutC);
+                            writer.Write(a);
+                        }
+                        else
+                        {
+                            throw new PineException("Cog compile error: Bad out value \"{0}\"", parts[1]);
+                        }
                         break;
                     default:
                         break;

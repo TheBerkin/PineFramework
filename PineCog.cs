@@ -412,6 +412,24 @@ namespace PineFramework
                         va = this.Device.Pop();
                         this.Device.Push((vc - va) / (vb - va));
                         break;
+                    case Instruction.Stop:
+                        return;
+                    case Instruction.OutC:
+                        va = codeReader.ReadDouble();
+                        if (!ranged) break;
+                        _output = va;
+                        break;
+                    case Instruction.OutR:
+                        reg0 = codeReader.ReadInt32();
+                        if (reg0 < 0 || reg0 >= _registers.Length)
+                        {
+                            throw new PineException("Cog \"{0}\" tried to access an invalid register.", _scriptName);
+                        }
+                        _output = _registers[reg0];
+                        break;
+                    case Instruction.OutS:
+                        _output = this.Device.Pop();
+                        break;
                     default:
                         throw new PineException("Script \"{0}\" tried to use an invalid operation ID (0x{1}).", _scriptName, string.Format("{0:X2}", bc).ToUpper());                        
                 }
@@ -420,7 +438,7 @@ namespace PineFramework
             {
                 Array.Clear(_registers, 0, _registers.Length);
             }
-            _output = this.Device.Pop() + _registers[RegOffset];
+            _output += _registers[RegOffset];
             if (this.Tick != null)
             {
                 this.Tick(this, new EventArgs());
