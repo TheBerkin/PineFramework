@@ -31,8 +31,10 @@ namespace PineFramework
         private bool _enabled;
         internal long TicksInternal;
 
-        internal Dictionary<string, CogBytecode> Cache;
-
+        /// <summary>
+        /// Creates a new PINE object with the specified capacity.
+        /// </summary>
+        /// <param name="maxObjects">The maximum capacity of the device.</param>
         public PineDevice(int maxObjects)
         {
             this.MaxObjects = maxObjects;
@@ -45,38 +47,6 @@ namespace PineFramework
 
             _enabled = true;
             TicksInternal = 0;
-
-            this.Cache = new Dictionary<string, CogBytecode>();
-        }
-
-        /// <summary>
-        /// Compiles a script and caches it within the device.
-        /// </summary>
-        /// <param name="name">The internal name for the script.</param>
-        /// <param name="path">The path to the script file.</param>
-        /// <returns></returns>
-        public bool LoadScript(string name, string path)
-        {
-            if (Cache.ContainsKey(name)) return false;
-            if (path.EndsWith(".cog") || path.EndsWith(".txt"))
-            {
-                using (StreamReader reader = new StreamReader(path))
-                {
-                    var code = PineCompiler.Compile(reader.ReadToEnd());
-                    Cache.Add(name, code);
-                    return true;
-                }
-            }
-            else if (path.EndsWith(".pcbf"))
-            {
-                var code = CogBytecode.FromFile(path);
-                Cache.Add(name, code);
-                return true;
-            }
-            else
-            {
-                throw new NotSupportedException("The framework attempted to load a file with an unrecognized extension: " + path);
-            }
         }
 
         /// <summary>
@@ -94,16 +64,6 @@ namespace PineFramework
         public long Ticks
         {
             get { return TicksInternal; }
-        }
-
-        /// <summary>
-        /// Determines if a script with a specific name is cached within the device.
-        /// </summary>
-        /// <param name="cogName">The internal name of the script.</param>
-        /// <returns></returns>
-        public bool IsCached(string cogName)
-        {
-            return Cache.ContainsKey(cogName);
         }
 
         private int NearestSlot()
@@ -264,6 +224,9 @@ namespace PineFramework
             return stackSize;
         }
 
+        /// <summary>
+        /// Clears the stack.
+        /// </summary>
         public void ClearStack()
         {
             stackSize = 0;
