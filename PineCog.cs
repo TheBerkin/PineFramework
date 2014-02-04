@@ -38,24 +38,48 @@ namespace PineFramework
         /// <param name="scriptName">The internal name of the script to load from cache.</param>
         public PineCog(PineDevice device, string scriptName, int period) : base(device)
         {
+            if (device.IsCached(scriptName))
+            {
+                _scriptName = scriptName;
+                Init(device, period, device.Cache[scriptName]);
+            }
+            else
+            {
+                throw new PineException("Tried to load a script that didn't exist in the device cache ({0}). Please make sure to call PineDevice.CacheScript() before fetching it.", scriptName);
+            }
+        }
+
+        public PineCog(PineDevice device, CogBytecode bytecode, int period) : base(device)
+        {
+            this.code = bytecode;
+            _scriptName = "userscript";
+            Init(device, period, code);
+        }
+
+        private void Init(PineDevice device, int period, CogBytecode code)
+        {
             if (period <= 0)
             {
                 period = 1;
             }
             _period = period;
             _output = 0;
-            _registers = new double[20];
-            if (device.IsCached(scriptName))
-            {
-                code = device.Cache[scriptName];
-                msCode = new MemoryStream(code.CompiledCode);
-                codeReader = new BinaryReader(msCode);
-                _scriptName = scriptName;
-            }
-            else
-            {
-                throw new PineException("Tried to load a script that didn't exist in the device cache ({0}). Please make sure to call PineDevice.CacheScript() before fetching it.", scriptName);
-            }
+            _registers = new double[20];            
+            msCode = new MemoryStream(code.CompiledCode);
+            codeReader = new BinaryReader(msCode);
+        }
+
+        /// <summary>
+        /// Reassigns the associated bytecode. Use for dev purposes only.
+        /// </summary>
+        /// <param name="bytecode">The new bytecode to assign to the cog.</param>
+        public void Reassign(CogBytecode bytecode)
+        {
+            codeReader.Dispose();
+            msCode.Dispose();
+            code = bytecode;
+            msCode = new MemoryStream(code.CompiledCode);
+            codeReader = new BinaryReader(msCode);
         }
 
         /// <summary>
@@ -80,6 +104,7 @@ namespace PineFramework
         public int Period
         {
             get { return _period; }
+            set { _period = value; }
         }
     
         /// <summary>

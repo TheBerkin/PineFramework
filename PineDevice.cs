@@ -264,6 +264,11 @@ namespace PineFramework
             return stackSize;
         }
 
+        public void ClearStack()
+        {
+            stackSize = 0;
+        }
+
         /// <summary>
         /// Gets the current number of PINE objects loaded to the device.
         /// </summary>
