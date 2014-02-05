@@ -48,7 +48,7 @@ namespace PineFramework
                     if (label.Contains(' ') || label.Length == 0) continue;
                     if (labelDefs.ContainsKey(label))
                     {
-                        throw new PineException("Pine compile error: Label \"{0}\" was defined more than once.", label);
+                        err("Label \"{0}\" was defined more than once.", label);
                     }
                     else
                     {
@@ -67,13 +67,14 @@ namespace PineFramework
                 string lbl1;
                 string lbl2;
                 int reg = -1;
+                uint u0, u1;
                 switch (parts[0].ToLower())
                 {
                     case "push":
                         reg = GetRegisterIndex(parts[1]);
                         if (parts.Length != 2)
                         {
-                            throw new PineException("Cog compile error: Invalid push syntax \"{0}\"", s);
+                            err("Invalid push syntax \"{0}\"", s);
                         }
                         if (parts[1] == "x")
                         {
@@ -96,33 +97,25 @@ namespace PineFramework
                         }
                         else
                         {
-                            throw new PineException("Cog compile error: Bad push value \"{0}\"", parts[1]);
+                            err("Bad push value \"{0}\"", parts[1]);
                         }
                         break;
                     case "add":
-                    case "+":
                         writer.Write((byte)Instruction.Add);
                         break;
-                    case "subtract":
                     case "sub":
-                    case "-":
                         writer.Write((byte)Instruction.Subtract);
                         break;
-                    case "divide":
                     case "div":
-                    case "/":
                         writer.Write((byte)Instruction.Divide);
                         break;
-                    case "multiply":
                     case "mul":
-                    case "*":
                         writer.Write((byte)Instruction.Multiply);
                         break;
                     case "lerp":
                         writer.Write((byte)Instruction.Lerp);
                         break;
                     case "clamp":
-                    case "|":
                         writer.Write((byte)Instruction.Clamp);
                         break;
                     case "mod":
@@ -131,7 +124,6 @@ namespace PineFramework
                     case "sqrt":
                         writer.Write((byte)Instruction.SquareRoot);
                         break;
-                    case "power":
                     case "pow":
                         writer.Write((byte)Instruction.Power);
                         break;
@@ -145,11 +137,12 @@ namespace PineFramework
                         writer.Write((byte)Instruction.RangeStart);
                         if (parts.Length != 3)
                         {
-                            throw new PineException("Cog compile error: Invalid range syntax \"{0}\"", s);
+                            err("Invalid range syntax \"{0}\"", s);
                         }
                         if (!double.TryParse(parts[1], out a) || !double.TryParse(parts[2], out b))
                         {
-                            throw new PineException("Cog compile error: Bad range values \"{0}\"", parts[1]);
+                            err("Bad range values \"{0}\"", parts[1]);
+                            break;
                         }
                         writer.Write(a);
                         writer.Write(b);
@@ -173,33 +166,27 @@ namespace PineFramework
                         writer.Write((byte)Instruction.Abs);
                         break;
                     case "rand":
-                    case "random":
                         writer.Write((byte)Instruction.Rand);
                         break;
                     case "copy":
-                    case "clone":
                         writer.Write((byte)Instruction.Copy);
                         break;
-                    case "<":
                     case "lt":
                         writer.Write((byte)Instruction.LT);
                         break;
-                    case ">":
                     case "gt":
                         writer.Write((byte)Instruction.GT);
                         break;
-                    case "<=":
                     case "le":
                         writer.Write((byte)Instruction.LE);
                         break;
-                    case ">=":
                     case "ge":
                         writer.Write((byte)Instruction.GE);
                         break;
                     case "pop":
                         if (parts.Length != 2)
                         {
-                            throw new PineException("Cog compile error: Invalid pop syntax \"{0}\"", s);
+                            err("Invalid pop syntax \"{0}\"", s);
                         }
                         else if (parts[1] == "out")
                         {
@@ -211,7 +198,7 @@ namespace PineFramework
                         reg = GetRegisterIndex(parts[1]);                        
                         if (reg < 0)
                         {
-                            throw new PineException("Cog compile error: Bad pop register \"{0}\"", parts[1]);
+                            err("Bad pop register \"{0}\"", parts[1]);
                         }
                         writer.Write(reg);
                         break;
@@ -219,12 +206,12 @@ namespace PineFramework
                         writer.Write((byte)Instruction.Zero);
                         if (parts.Length != 2)
                         {
-                            throw new PineException("Cog compile error: Invalid zero syntax \"{0}\"", s);
+                            err("Invalid zero syntax \"{0}\"", s);
                         }
                         reg = GetRegisterIndex(parts[1]);
                         if (reg < 0)
                         {
-                            throw new PineException("Cog compile error: Bad zero register \"{0}\"", parts[1]);
+                            err("Bad zero register \"{0}\"", parts[1]);
                         }
                         writer.Write(reg);
                         break;
@@ -235,7 +222,7 @@ namespace PineFramework
                         writer.Write((byte)Instruction.JumpNotZero);
                         if (parts.Length != 2)
                         {
-                            throw new PineException("Cog compile error: Invalid jnz syntax \"{0}\"", s);
+                            err("Invalid jnz syntax \"{0}\"", s);
                         }
                         lbl1 = parts[1];
                         if (!labelCalls.Contains(lbl1))
@@ -248,7 +235,7 @@ namespace PineFramework
                         writer.Write((byte)Instruction.Jump);
                         if (parts.Length != 2)
                         {
-                            throw new PineException("Cog compile error: Invalid jmp syntax \"{0}\"", s);
+                            err("Invalid jmp syntax \"{0}\"", s);
                         }
                         lbl1 = parts[1];
                         if (!labelCalls.Contains(lbl1))
@@ -264,7 +251,7 @@ namespace PineFramework
                         writer.Write((byte)Instruction.JumpAlternate);
                         if (parts.Length != 3)
                         {
-                            throw new PineException("Cog compile error: Invalid jmpx syntax \"{0}\"", s);
+                            err("Invalid jmpx syntax \"{0}\"", s);
                         }
                         lbl1 = parts[1]; // Nonzero case
                         lbl2 = parts[2]; // Zero case
@@ -282,7 +269,7 @@ namespace PineFramework
                     case "call":
                         if (parts.Length != 2)
                         {
-                            throw new PineException("Cog compile error: Invalid call syntax \"{0}\"", s);
+                            err("Invalid call syntax \"{0}\"", s);
                         }
                         writer.Write((byte)Instruction.Call);
                         lbl1 = parts[1];
@@ -314,7 +301,7 @@ namespace PineFramework
                         reg = GetRegisterIndex(parts[1]);
                         if (parts.Length != 2)
                         {
-                            throw new PineException("Cog compile error: Invalid push syntax \"{0}\"", s);
+                            err("Invalid push syntax \"{0}\"", s);
                         }
                         if (reg > -1)
                         {
@@ -328,10 +315,105 @@ namespace PineFramework
                         }
                         else
                         {
-                            throw new PineException("Cog compile error: Bad out value \"{0}\"", parts[1]);
+                            err("Bad out value \"{0}\"", parts[1]);
                         }
                         break;
+                    case "t.on":
+                        assure(parts, 2);
+                        t_index(parts[1], out u0);
+                        writer.Write((byte)Instruction.TimerStart);
+                        writer.Write(u0);
+                        break;
+                    case "t.off":
+                        assure(parts, 2);
+                        t_index(parts[1], out u0);
+                        writer.Write((byte)Instruction.TimerStop);
+                        writer.Write(u0);
+                        break;
+                    case "t.set":
+                        assure(parts, 3);
+                        t_index(parts[1], out u0);
+                        parseu(parts[2], out u1);
+                        writer.Write((byte)Instruction.TimerSet);
+                        writer.Write(u0);
+                        writer.Write(u1);
+                        break;
+                    case "t.check":
+                        assure(parts, 2);
+                        t_index(parts[1], out u0);
+                        writer.Write((byte)Instruction.TimerStatus);
+                        writer.Write(u0);
+                        break;
+                    case "t.pusht":
+                        assure(parts, 2);
+                        t_index(parts[1], out u0);
+                        writer.Write((byte)Instruction.TimerGetT);
+                        writer.Write(u0);
+                        break;
+                    case "t.pushl":
+                        assure(parts, 2);
+                        t_index(parts[1], out u0);
+                        writer.Write((byte)Instruction.TimerGetL);
+                        writer.Write(u0);
+                        break;
+                    case "t.reset":
+                        assure(parts, 2);
+                        t_index(parts[1], out u0);
+                        writer.Write((byte)Instruction.TimerReset);
+                        writer.Write(u0);
+                        break;
+                    case "stop":
+                        assure(parts, 1);
+                        writer.Write((byte)Instruction.Stop);
+                        break;
+                    case "_clk_c":
+                        assure(parts, 3);
+                        t_index(parts[1], out u0);
+                        parseu(parts[2], out u1);
+                        writer.Write((byte)Instruction.TimerGetT);
+                        writer.Write(u0);
+                        writer.Write((byte)Instruction.PushC);
+                        writer.Write((double)u1);
+                        writer.Write((byte)Instruction.Divide);
+                        writer.Write((byte)Instruction.PushC);
+                        writer.Write(2.0);
+                        writer.Write((byte)Instruction.Modulo);
+                        writer.Write((byte)Instruction.PushC);
+                        writer.Write(1.0);
+                        writer.Write((byte)Instruction.GT);
+                        break;
+                    case "_clk_r":
+                        assure(parts, 3);
+                        t_index(parts[1], out u0);
+                        r_index(parts[2], out reg);
+                        writer.Write((byte)Instruction.TimerGetT);
+                        writer.Write(u0);
+                        writer.Write((byte)Instruction.PushReg);
+                        writer.Write(reg);
+                        writer.Write((byte)Instruction.Divide);
+                        writer.Write((byte)Instruction.PushC);
+                        writer.Write(2.0);
+                        writer.Write((byte)Instruction.Modulo);
+                        writer.Write((byte)Instruction.PushC);
+                        writer.Write(1.0);
+                        writer.Write((byte)Instruction.GT);
+                        break;
+                    case "_clk_pop":
+                        assure(parts, 2);
+                        t_index(parts[1], out u0);
+                        writer.Write((byte)Instruction.TimerGetT);
+                        writer.Write(u0);
+                        writer.Write((byte)Instruction.Pop);
+                        writer.Write((byte)Instruction.Divide);
+                        writer.Write((byte)Instruction.PushC);
+                        writer.Write(2.0);
+                        writer.Write((byte)Instruction.Modulo);
+                        writer.Write((byte)Instruction.PushC);
+                        writer.Write(1.0);
+                        writer.Write((byte)Instruction.GT);
+                        break;
                     default:
+                        err("Unrecognized instruction \"{0}\"", parts[0]);
                         break;
                 }
             }
@@ -349,7 +431,7 @@ namespace PineFramework
                         missing += ", ";
                     }
                 }
-                throw new PineException("Cog compile error: Label definitions missing for the following references: {0}", missing);
+                err("Label definitions missing for the following references: {0}", missing);
             }
             int[] labels = new int[labelDefs.Count];
             foreach(KeyValuePair<string, int> labelPair in labelDefs)
@@ -361,6 +443,78 @@ namespace PineFramework
                 }
             }
             return new CogBytecode(ms.ToArray(), labels);
+        }
+
+        private static void t_index(string raw, out uint u)
+        {
+            int ti = GetTimerIndex(raw);
+            if (ti == -1)
+            {
+                err("Timer index out of range: {0}", raw);
+                u = 0;
+            }         
+            else
+            {
+                u = (uint)ti;
+            }
+        }
+
+        private static void r_index(string raw, out int r)
+        {
+            int ti = GetRegisterIndex(raw);
+            if (ti == -1)
+            {
+                err("Register index out of range: {0}", raw);
+                r = -1;
+            }
+            else
+            {
+                r = ti;
+            }
+        }
+
+        private static void parseu(string raw, out uint u)
+        {
+            if (!uint.TryParse(raw.Trim(), out u))
+            {
+                err("Bad argument '{0}'", raw);
+            }
+        }
+
+        private static void assure(string[] parts, int expected)
+        {
+            if (parts.Length != expected)
+            {
+                err("Invalid {0} syntax", parts[0].ToLower());
+            }
+        }
+
+        private static void err(string msg, params object[] args)
+        {
+            throw new PineException("Cog compile error: " + string.Format(msg, args));
+        }
+
+        private static int GetTimerIndex(string timerName)
+        {
+            string name = timerName.ToLower().Trim();
+
+            if (!name.StartsWith("t"))
+            {
+                return -1;
+            }
+
+            int i;
+            if (!int.TryParse(name.Substring(1), out i))
+            {
+                return -1;
+            }
+
+            if (i < 0 || i >= PineCog.NumTimers)
+            {
+                return -1;
+            }
+
+            return i;
         }
 
         private static int GetRegisterIndex(string regName)

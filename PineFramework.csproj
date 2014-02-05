@@ -43,6 +43,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CogBytecode.cs" />
+    <Compile Include="CogTimer.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="GlobalRNG.cs" />
     <Compile Include="PineBlender.cs" />

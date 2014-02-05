@@ -52,6 +52,14 @@ namespace PineFramework
         Stop =          0x29,
         OutS =          0x2A,
         OutR =          0x2B,
-        OutC =          0x2C
+        OutC =          0x2C,
+
+        TimerStart =    0x2D,
+        TimerStop  =    0x2E,
+        TimerSet =      0x2F,
+        TimerStatus =   0x30,
+        TimerGetT =     0x31,
+        TimerGetL =     0x32,
+        TimerReset =    0x33
     }
 }

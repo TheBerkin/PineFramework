@@ -21,9 +21,12 @@ namespace PineFramework
         private readonly string _scriptName;
 
         private double[] _registers;
+        private CogTimer[] _timers;
 
         private const int RegReset = (int)CogRegister.Reset;
         private const int RegOffset = (int)CogRegister.Offset;
+
+        public const int NumTimers = 16;
 
         /// <summary>
         /// This event is called upon successful execution of the "fire" instruction in a cog.
@@ -45,7 +48,8 @@ namespace PineFramework
             }
             _period = period;
             _output = 0;
-            _registers = new double[20];            
+            _registers = new double[20];
+            _timers = new CogTimer[NumTimers];
             msCode = new MemoryStream(code.CompiledCode);
             codeReader = new BinaryReader(msCode);
         }
@@ -116,6 +120,7 @@ namespace PineFramework
 
             double va, vb, vc;
             int reg0, reg1;
+            uint u0, u1;
             double x = (double)(this.Device.TicksInternal % _period) / _period;
 
             double rmin = 0.0;
@@ -419,6 +424,7 @@ namespace PineFramework
                         this.Device.Push((vc - va) / (vb - va));
                         break;
                     case Instruction.Stop:
+                        if (!ranged) break;
                         return;
                     case Instruction.OutC:
                         va = codeReader.ReadDouble();
@@ -427,6 +433,7 @@ namespace PineFramework
                         break;
                     case Instruction.OutR:
                         reg0 = codeReader.ReadInt32();
+                        if (!ranged) break;
                         if (reg0 < 0 || reg0 >= _registers.Length)
                         {
                             throw new PineException("Cog \"{0}\" tried to access an invalid register.", _scriptName);
@@ -434,7 +441,44 @@ namespace PineFramework
                         _output = _registers[reg0];
                         break;
                     case Instruction.OutS:
+                        if (!ranged) break;
                         _output = this.Device.Pop();
+                        break;
+                    case Instruction.TimerStart:
+                        u0 = codeReader.ReadUInt32();
+                        if (!ranged) break;
+                        _timers[u0].Active = true;
+                        break;
+                    case Instruction.TimerStop:
+                        u0 = codeReader.ReadUInt32();
+                        if (!ranged) break;
+                        _timers[u0].Active = false;
+                        break;
+                    case Instruction.TimerSet:
+                        u0 = codeReader.ReadUInt32();
+                        u1 = codeReader.ReadUInt32();
+                        if (!ranged) break;
+                        _timers[u0].Limit = u1;
+                        break;
+                    case Instruction.TimerStatus:
+                        u0 = codeReader.ReadUInt32();
+                        if (!ranged) break;
+                        this.Device.Push(_timers[u0].Status());
+                        break;
+                    case Instruction.TimerGetT:
+                        u0 = codeReader.ReadUInt32();
+                        if (!ranged) break;
+                        this.Device.Push(_timers[u0].Ticks);
+                        break;
+                    case Instruction.TimerGetL:
+                        u0 = codeReader.ReadUInt32();
+                        if (!ranged) break;
+                        this.Device.Push(_timers[u0].Limit);
+                        break;
+                    case Instruction.TimerReset:
+                        u0 = codeReader.ReadUInt32();
+                        if (!ranged) break;
+                        _timers[u0].Reset();
                         break;
                     default:
                         throw new PineException("Script \"{0}\" tried to use an invalid operation ID (0x{1}).", _scriptName, string.Format("{0:X2}", bc).ToUpper());                        
@@ -445,9 +489,23 @@ namespace PineFramework
                 Array.Clear(_registers, 0, _registers.Length);
             }
             _output += _registers[RegOffset];
+
+            DoTimers();
+
             if (this.Tick != null)
             {
                 this.Tick(this, new EventArgs());
+            }
+        }
+
+        private void DoTimers()
+        {
+            for(int i = 0; i < _timers.Length; i++)
+            {
+                if (_timers[i].Active)
+                {
+                    _timers[i].Inc();
+                }
             }
         }
 
